@@ -5,15 +5,18 @@ let contract = null;
 let currentAccount = null;
 let selectedWalletType = null;
 
-// Wait for ethers.js to load
+// Wait for everything to load
 function waitForEthers() {
     return new Promise((resolve) => {
-        if (typeof ethers !== 'undefined') {
+        if (typeof ethers !== 'undefined' && typeof CONTRACT_ABI !== 'undefined') {
+            console.log('✅ Ethers.js and contract config loaded');
             resolve();
         } else {
+            console.log('⏳ Waiting for libraries to load...');
             const checkEthers = setInterval(() => {
-                if (typeof ethers !== 'undefined') {
+                if (typeof ethers !== 'undefined' && typeof CONTRACT_ABI !== 'undefined') {
                     clearInterval(checkEthers);
+                    console.log('✅ All libraries loaded');
                     resolve();
                 }
             }, 100);
@@ -21,30 +24,71 @@ function waitForEthers() {
     });
 }
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
-    await waitForEthers();
-    initializeApp();
-});
+// Initialize app when DOM and libraries are loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await waitForEthers();
+        initializeApp();
+    });
+} else {
+    // DOM already loaded
+    waitForEthers().then(() => initializeApp());
+}
 
 function initializeApp() {
-    console.log('Initializing app...');
-    setupEventListeners();
-    checkWalletConnection();
-    loadRaffles();
+    console.log('🚀 Initializing Web3 Raffle Platform...');
+    
+    try {
+        setupEventListeners();
+        console.log('✅ Event listeners setup complete');
+        
+        checkWalletConnection();
+        console.log('✅ Wallet connection check complete');
+        
+        loadRaffles();
+        console.log('✅ Loading raffles...');
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+        alert('Error initializing app. Please refresh the page.');
+    }
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    document.getElementById('connectWalletBtn').addEventListener('click', showWalletModal);
-    document.getElementById('closeModal').addEventListener('click', hideWalletModal);
-    document.getElementById('closeAccountModal').addEventListener('click', hideAccountModal);
-    document.getElementById('disconnectBtn').addEventListener('click', disconnectWallet);
+    console.log('Setting up event listeners...');
+    
+    const connectBtn = document.getElementById('connectWalletBtn');
+    const closeModalBtn = document.getElementById('closeModal');
+    const closeAccountModalBtn = document.getElementById('closeAccountModal');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    
+    if (connectBtn) {
+        connectBtn.addEventListener('click', showWalletModal);
+        console.log('✅ Connect wallet button listener added');
+    } else {
+        console.error('❌ Connect wallet button not found');
+    }
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', hideWalletModal);
+    }
+    
+    if (closeAccountModalBtn) {
+        closeAccountModalBtn.addEventListener('click', hideAccountModal);
+    }
+    
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', disconnectWallet);
+    }
     
     // Wallet option buttons
-    document.querySelectorAll('.wallet-option').forEach(button => {
+    const walletOptions = document.querySelectorAll('.wallet-option');
+    console.log(`Found ${walletOptions.length} wallet options`);
+    
+    walletOptions.forEach(button => {
         button.addEventListener('click', (e) => {
             const walletType = e.currentTarget.dataset.wallet;
+            console.log('Wallet option clicked:', walletType);
             connectWallet(walletType);
         });
     });
@@ -264,12 +308,22 @@ async function checkWalletConnection() {
 
 // Load raffles from contract
 async function loadRaffles() {
+    console.log('📋 Loading raffles...');
+    
     try {
         const raffleContainer = document.getElementById('raffleContainer');
         const noRaffles = document.getElementById('noRaffles');
         
+        if (!raffleContainer) {
+            console.error('❌ Raffle container not found');
+            return;
+        }
+        
+        console.log('Contract address:', CONTRACT_ADDRESS);
+        
         // For demo purposes, create sample raffles if contract is not deployed
         if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+            console.log('📝 Contract not deployed, loading demo raffles...');
             createDemoRaffles();
             return;
         }
@@ -317,11 +371,20 @@ async function loadRaffles() {
 
 // Create demo raffles for testing
 function createDemoRaffles() {
+    console.log('🎨 Creating demo raffles...');
+    
     const raffleContainer = document.getElementById('raffleContainer');
     const noRaffles = document.getElementById('noRaffles');
     
+    if (!raffleContainer) {
+        console.error('❌ Raffle container not found in createDemoRaffles');
+        return;
+    }
+    
     noRaffles.classList.add('hidden');
     raffleContainer.innerHTML = '';
+    
+    console.log('Container cleared, adding raffles...');
     
     const demoRaffles = [
         {
@@ -365,12 +428,24 @@ function createDemoRaffles() {
         }
     ];
     
-    demoRaffles.forEach(raffle => createRaffleCard(raffle));
+    console.log(`Creating ${demoRaffles.length} demo raffle cards...`);
+    demoRaffles.forEach((raffle, index) => {
+        console.log(`Creating raffle ${index + 1}:`, raffle.title);
+        createRaffleCard(raffle);
+    });
+    console.log('✅ Demo raffles created successfully');
 }
 
 // Create raffle card
 function createRaffleCard(raffle) {
+    console.log('Creating raffle card for:', raffle.title);
+    
     const template = document.getElementById('raffleTemplate');
+    if (!template) {
+        console.error('❌ Raffle template not found');
+        return;
+    }
+    
     const clone = template.content.cloneNode(true);
     
     // Set raffle details
