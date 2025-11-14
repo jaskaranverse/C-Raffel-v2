@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1f2937;
+            color: #f9fafb;
+        }
+        .test-section {
+            background: #374151;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #1f2937;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .info {
+            color: #60a5fa;
+        }
+        pre {
+            background: #1f2937;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 Wallet Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Check Environment</h2>
+        <button onclick="checkEnvironment()">Check Environment</button>
+        <div id="envStatus" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Connect Wallet</h2>
+        <button onclick="connectWallet()">Connect MetaMask</button>
+        <div id="walletStatus" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Get Account Info</h2>
+        <button onclick="getAccountInfo()">Get Account Info</button>
+        <div id="accountStatus" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Console Logs</h2>
+        <p class="info">Open browser console (F12) to see detailed logs</p>
+    </div>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script>
+        let provider = null;
+        let signer = null;
+        let account = null;
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            element.innerHTML = `<span class="${className}">${message}</span>`;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        async function checkEnvironment() {
+            console.log('=== Checking Environment ===');
+            let status = '';
+            
+            // Check if running in browser
+            status += '✅ Running in browser\n';
+            
+            // Check for Ethereum provider
+            if (typeof window.ethereum !== 'undefined') {
+                status += '✅ Ethereum provider detected\n';
+                status += `   Provider: ${window.ethereum.isMetaMask ? 'MetaMask' : 'Unknown'}\n`;
+            } else {
+                status += '❌ No Ethereum provider found\n';
+                status += '   Please install MetaMask: https://metamask.io/\n';
+            }
+            
+            // Check for ethers.js
+            if (typeof ethers !== 'undefined') {
+                status += '✅ Ethers.js loaded\n';
+                status += `   Version: ${ethers.version}\n`;
+            } else {
+                status += '❌ Ethers.js not loaded\n';
+            }
+            
+            log('envStatus', `<pre>${status}</pre>`);
+        }
+
+        async function connectWallet() {
+            console.log('=== Connecting Wallet ===');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('walletStatus', '❌ MetaMask not installed', 'error');
+                return;
+            }
+
+            try {
+                log('walletStatus', '⏳ Requesting account access...', 'info');
+                
+                // Request account access
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                console.log('Accounts received:', accounts);
+                
+                if (accounts.length === 0) {
+                    log('walletStatus', '❌ No accounts found', 'error');
+                    return;
+                }
+                
+                account = accounts[0];
+                
+                // Create provider
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                
+                const network = await provider.getNetwork();
+                const balance = await provider.getBalance(account);
+                
+                let status = '✅ Wallet Connected!\n\n';
+                status += `Address: ${account}\n`;
+                status += `Network: ${network.name} (Chain ID: ${network.chainId})\n`;
+                status += `Balance: ${ethers.utils.formatEther(balance)} ETH\n`;
+                
+                log('walletStatus', `<pre>${status}</pre>`, 'success');
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                
+                if (error.code === 4001) {
+                    log('walletStatus', '❌ User rejected the connection request', 'error');
+                } else {
+                    log('walletStatus', `❌ Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function getAccountInfo() {
+            console.log('=== Getting Account Info ===');
+            
+            if (!provider || !account) {
+                log('accountStatus', '❌ Please connect wallet first', 'error');
+                return;
+            }
+
+            try {
+                const network = await provider.getNetwork();
+                const balance = await provider.getBalance(account);
+                const blockNumber = await provider.getBlockNumber();
+                const gasPrice = await provider.getGasPrice();
+                
+                let status = '📊 Account Information:\n\n';
+                status += `Address: ${account}\n`;
+                status += `Short: ${account.substring(0, 6)}...${account.substring(account.length - 4)}\n\n`;
+                status += `Network: ${network.name}\n`;
+                status += `Chain ID: ${network.chainId}\n`;
+                status += `Block Number: ${blockNumber}\n\n`;
+                status += `Balance: ${ethers.utils.formatEther(balance)} ETH\n`;
+                status += `Gas Price: ${ethers.utils.formatUnits(gasPrice, 'gwei')} Gwei\n`;
+                
+                log('accountStatus', `<pre>${status}</pre>`, 'success');
+                
+            } catch (error) {
+                console.error('Error getting account info:', error);
+                log('accountStatus', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check environment on load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, checking environment...');
+            setTimeout(checkEnvironment, 500);
+        });
+
+        // Listen for account changes
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                console.log('Accounts changed:', accounts);
+                if (accounts.length === 0) {
+                    log('walletStatus', '⚠️ Wallet disconnected', 'error');
+                    account = null;
+                    provider = null;
+                    signer = null;
+                } else {
+                    account = accounts[0];
+                    log('walletStatus', `✅ Switched to: ${account}`, 'success');
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                console.log('Chain changed:', chainId);
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>

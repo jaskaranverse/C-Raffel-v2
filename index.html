@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Raffle - Decentralized Lottery</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎟️ Web3 Raffle</h1>
+            <button id="connectWalletBtn" class="connect-btn">Connect Wallet</button>
+            <div id="walletInfo" class="wallet-info hidden">
+                <span id="walletAddress"></span>
+                <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Wallet Selection Modal -->
+    <div id="walletModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Select Wallet</h2>
+            <div class="wallet-options">
+                <button class="wallet-option" data-wallet="metamask">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask">
+                    <span>MetaMask</span>
+                </button>
+                <button class="wallet-option" data-wallet="phantom">
+                    <img src="https://phantom.app/img/phantom-logo.svg" alt="Phantom">
+                    <span>Phantom</span>
+                </button>
+                <button class="wallet-option" data-wallet="trustwallet">
+                    <img src="https://trustwallet.com/assets/images/media/assets/TWT.png" alt="Trust Wallet">
+                    <span>Trust Wallet</span>
+                </button>
+                <button class="wallet-option" data-wallet="walletconnect">
+                    <img src="https://walletconnect.com/walletconnect-logo.svg" alt="WalletConnect">
+                    <span>WalletConnect</span>
+                </button>
+            </div>
+            <button id="closeModal" class="close-modal">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Account Selection Modal -->
+    <div id="accountModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Select Account</h2>
+            <div id="accountList" class="account-list"></div>
+            <button id="closeAccountModal" class="close-modal">Cancel</button>
+        </div>
+    </div>
+
+    <main class="container">
+        <div id="raffleContainer" class="raffle-container">
+            <!-- Raffles will be dynamically loaded here -->
+        </div>
+
+        <div id="noRaffles" class="no-raffles hidden">
+            <p>No active raffles at the moment. Check back soon!</p>
+        </div>
+    </main>
+
+    <!-- Raffle Template -->
+    <template id="raffleTemplate">
+        <div class="raffle-card">
+            <div class="raffle-image">
+                <img src="" alt="Raffle Prize">
+            </div>
+            <div class="raffle-details">
+                <h2 class="raffle-title"></h2>
+                <div class="raffle-info">
+                    <div class="info-item">
+                        <span class="label">Prize Pool:</span>
+                        <span class="value prize-pool"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Entry Fee:</span>
+                        <span class="value entry-fee"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Participants:</span>
+                        <span class="value participants"></span>
+                    </div>
+                </div>
+                <div class="countdown">
+                    <span class="label">Time Remaining:</span>
+                    <div class="countdown-timer">
+                        <div class="time-unit">
+                            <span class="time-value days">00</span>
+                            <span class="time-label">Days</span>
+                        </div>
+                        <div class="time-unit">
+                            <span class="time-value hours">00</span>
+                            <span class="time-label">Hours</span>
+                        </div>
+                        <div class="time-unit">
+                            <span class="time-value minutes">00</span>
+                            <span class="time-label">Minutes</span>
+                        </div>
+                        <div class="time-unit">
+                            <span class="time-value seconds">00</span>
+                            <span class="time-label">Seconds</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="buy-ticket-btn">Buy Ticket</button>
+                <div class="raffle-status hidden"></div>
+            </div>
+            <div class="participants-history">
+                <h3>Participants History</h3>
+                <div class="participants-list"></div>
+            </div>
+            <div class="winner-announcement hidden">
+                <h3>🎉 Winner Announced!</h3>
+                <p class="winner-address"></p>
+            </div>
+        </div>
+    </template>
+
+    <footer>
+        <div class="container">
+            <p>Decentralized Raffle Platform - No Signup Required</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="contract.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
